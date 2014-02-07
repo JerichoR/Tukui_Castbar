@@ -1,94 +1,43 @@
--- Standalone Castbar for Tukui by Krevlorne @ EU-Ulduar
--- Credits to Tukz, Syne, Elv22, Sweeper and all other great people of the Tukui community.
-
-local T, C, _ = unpack(Tukui) -- Import: T - functions, constants, variables; C - config; L - locales
-
 local addon, ns=...
 local config = ns.config
 
-local font = C["media"].uffont
-local normTex = C["media"].normTex;
+local T, C, L, G = unpack(Tukui) -- Import: T - functions, constants, variables; C - config; L - locales; G - Globals
 
-local Castbar = {
-	tukuiBar,
-	size,
-	anchor,
-	castbarpanel,
-}
-Castbar.__index = Castbar -- class is metatable for its instances
+local Castbar = CreateFrame("Frame", "Tukui_Castbar")
+Castbar.__index = Castbar
+ns.Castbar = Castbar
 
-function Castbar:create(template)
-	cb = {}
+function Castbar:detach(tukuibar, template)
+	if not template.separate then return; end
+	
+	local cb = {}
 	setmetatable(cb, self)
 	
-	cb.tukuiBar = template.tukuiBar
+	cb.tukuiBar = tukuibar
 	cb.size = template.size
-	cb.tukuiBar.Castbar = cb.tukuiBar
+	cb.position = template.position
 	
-	cb:createPanel()
-	cb:showSpell(template.text)
-	cb:showTimer(template.timer)
-	cb:showLatency(template.latency)
 	cb:createAnchor(cb.tukuiBar:GetName())
+	cb:createPanel(cb.tukuiBar:GetName())
+	cb:showSpellName(template.text)
+	cb:showCastTime(template.timer)
+	cb:showLatency(template.latency)
+	cb:showSpellIcon(template.icon)
 	
 	return cb
 end
 
-function Castbar:createPanel() 
-	local panel = CreateFrame("Frame", self.tukuiBar:GetName().."_Panel", self.tukuiBar)
-    panel:SetTemplate("Default")
-    panel:Size(self.size[1], self.size[2])
-    panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    panel:SetFrameLevel(1)
-    panel:SetFrameStrata("BACKGROUND")
-	panel:CreateShadow("Default")
-	self.castbarpanel = panel
-end
-
--- spellname on cast bar
-function Castbar:showSpell(conf)
-	if not conf then return end
-	
-	local text = T.SetFontString(self.tukuiBar, font, 12)
-	text:SetPoint(conf.alignment[1], self.castbarpanel, conf.alignment[1], conf.alignment[2], conf.alignment[3])
-	text:SetTextColor(unpack(conf.color))
-	text:SetJustifyH(conf.alignment[1])
-	self.tukuiBar.Castbar.Text = text
-end
-
--- casttime on cast bar
-function Castbar:showTimer(conf)
-	if not conf then return end
-	
-	local timer = T.SetFontString(self.tukuiBar, font, 12)
-	timer:SetPoint(conf.alignment[1], self.castbarpanel, conf.alignment[1], conf.alignment[2], conf.alignment[3])
-	timer:SetTextColor(unpack(conf.color))
-	timer:SetJustifyH(conf.alignment[1])
-
-	self.tukuiBar.Castbar.Time = timer
-end
-
--- cast bar latency
-function Castbar:showLatency(conf)
-	if not conf then return end
-	
-	local safezone = self.tukuiBar:CreateTexture(nil, "ARTWORK")
-	safezone:SetTexture(normTex)
-	safezone:SetVertexColor(unpack(conf.color))
-	
-	self.tukuiBar.SafeZone = safezone
-end
-
--- anchor for moveable frames
+-- create anchor for moveable frames
 function Castbar:createAnchor(name)
-	local anchor = CreateFrame("Button", name.."_PanelAnchor", UIParent)
+	local anchor = CreateFrame("Button", name.."_Anchor", UIParent)
 	anchor:SetTemplate("Default")
 	anchor:SetSize(self.size[1], self.size[2])
+	anchor:SetPoint("CENTER", UIParent, "CENTER", self.position[1], self.position[2])
 	anchor:SetBackdropBorderColor(1, 0, 0, 1)
 	anchor:SetMovable(true)
 	anchor:Hide()
 	
-	anchor.text = T.SetFontString(anchor, font, 12)
+	anchor.text = T.SetFontString(anchor, C["media"].font, 12)
 	anchor.text:SetPoint("CENTER")
 	anchor.text:SetText(name)
 	anchor.text.Show = function() anchor:Show() end
@@ -98,18 +47,94 @@ function Castbar:createAnchor(name)
 	table.insert(T.AllowFrameMoving, self.anchor)
 end
 
--- place the castbar on screen
-function Castbar:placeBar(position, iconposition) 
-	self.anchor:SetPoint("CENTER", UIParent, "CENTER", position[1], position[2])
-	self.castbarpanel:SetPoint("CENTER", self.anchor, "CENTER", 0, 0)
+-- create background panel for the castbar
+function Castbar:createPanel(name)
+	local panel = CreateFrame("Frame", name.."_Panel", self.tukuiBar)
+    panel:SetTemplate("Default")
+	panel:Size(self.size[1], self.size[2])
+	panel:SetPoint("CENTER", self.anchor, "CENTER", 0, 0)
+    panel:SetFrameLevel(1)
+    panel:SetFrameStrata("BACKGROUND")
+	panel:CreateShadow("Default")
+	self.castbarpanel = panel
 	
 	self.tukuiBar:ClearAllPoints()      
-	self.tukuiBar:Point("TOPLEFT", self.castbarpanel, 2, -2)
-	self.tukuiBar:Point("BOTTOMRIGHT", self.castbarpanel, -2, 2)
-	
-	self.tukuiBar.button:ClearAllPoints()
-	self.tukuiBar.button:Size(self.size[2])
-	self.tukuiBar.button:Point("CENTER", self.tukuiBar, iconposition[1], iconposition[2], iconposition[3])
+	self.tukuiBar:Point("TOPLEFT", panel, 2, -2)
+	self.tukuiBar:Point("BOTTOMRIGHT", panel, -2, 2)
 end
 
-ns.Castbar = Castbar
+-- move spellname on cast bar
+function Castbar:showSpellName(conf)
+	local text = self.tukuiBar.Text
+	
+	if not conf then 
+		text:Hide()
+	else
+		text:SetPoint(conf.alignment[1], self.castbarpanel, conf.alignment[1], conf.alignment[2], conf.alignment[3])
+		text:SetTextColor(unpack(conf.color))
+		text:SetJustifyH(conf.alignment[1])
+	end
+end
+
+-- move casttime on cast bar
+function Castbar:showCastTime(conf)
+	local timer = self.tukuiBar.time
+	
+	if not conf then 
+		timer:Hide()
+	else
+		timer:SetPoint(conf.alignment[1], self.castbarpanel, conf.alignment[1], conf.alignment[2], conf.alignment[3])
+		timer:SetTextColor(unpack(conf.color))
+		timer:SetJustifyH(conf.alignment[1])
+	end
+end
+
+-- move cast bar latency
+function Castbar:showLatency(conf)
+	local safeZone = self.tukuiBar.safezone
+	
+	if safeZone then
+		if not conf then
+			safeZone:Hide()
+		else
+			safeZone:SetVertexColor(unpack(conf.color))
+		end
+	end
+end
+
+-- move spellIcon
+function Castbar:showSpellIcon(conf)
+	local button = self.tukuiBar.button
+	local icon = self.tukuiBar.icon
+	
+	if button then
+		if not conf then
+			button:Hide()
+		else
+			button:ClearAllPoints()
+			button:Size(self.size[2])
+			button:SetPoint("CENTER", self.tukuiBar, conf.alignment[1], conf.alignment[2], conf.alignment[3])
+			icon:ClearAllPoints()
+			icon:Point("TOPLEFT", button, 2, -2)
+			icon:Point("BOTTOMRIGHT", button, -2, 2)
+		end
+	end
+end
+
+-- execute code when first time casting
+-- any method can be over written externally before it is executed here
+function Castbar:init() 
+	Castbar:UnregisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+	Castbar:UnregisterEvent("UNIT_SPELLCAST_START")
+
+	Castbar:detach(TukuiPlayerCastBar, config["player"])
+	Castbar:detach(TukuiTargetCastBar, config["target"])
+	Castbar:detach(TukuiFocusCastBar, config["focus"])
+	Castbar:detach(TukuiFocusTargetCastBar, config["focustarget"])
+end
+
+Castbar:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+Castbar:RegisterEvent("UNIT_SPELLCAST_START")
+Castbar:SetScript("OnEvent", Castbar.init)
+
+

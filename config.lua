@@ -1,33 +1,29 @@
 local addon, ns = ...
 
 ns.config={
-    ["separateplayer"] = true, -- separate player castbar
-    ["separatetarget"] = true, -- separate target castbar
-    ["separatefocus"] = true, -- separate focus castbar
-    ["separatefocustarget"]  = false, -- separate focustarget castbar
-	
     player = {
-		tukuiBar = TukuiPlayerCastBar, 			-- [required]
-		size = {250, 26}, 						-- [required] width and height of castbar
-		position = {0, -200}, 					-- [required] position of castbar (relative to UIParent CENTER)
-		iconposition = {"LEFT", -25, 0}, 		-- [required] spellicon position (relative to castbar)
-		text = { 								-- [optional] config for spellname, remove for no name
+		separate = true,						-- separate player castbar
+		size = {250, 26}, 						-- width and height of castbar
+		position = {0, -200}, 					-- position of castbar (relative to UIParent CENTER)
+		text = { 								-- [optional] config for spellname
 			alignment = {"LEFT", 4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
 		}, 
-		timer = {								-- [optional] config for casttime, remove for no timer
+		timer = {								-- [optional] config for casttime
 			alignment = {"RIGHT", -4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
 		},
-		latency = { 							-- [optional] config for redzone (latency), remove for no redzone
+		latency = { 							-- [optional] config for redzone (latency), only available for player castbar
 			color = {0.69, 0.31, 0.31, 0.75}, 
 		},
+		icon = {								-- [optional] spellicon position (relative to castbar)
+			alignment = {"LEFT", -25, 0},
+		}, 
     },
     target = {
-		tukuiBar = TukuiTargetCastBar, 
+		separate = true,						-- separate target castbar
         size = {250, 26}, 
 		position = {0, -150}, 
-		iconposition = {"RIGHT", 25, 0}, 
 		text = { 
 			alignment = {"LEFT", 4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
@@ -36,15 +32,14 @@ ns.config={
 			alignment = {"RIGHT", -4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
 		},
-		latency = { 
-			color = {0.69, 0.31, 0.31, 0.75}, 
+		icon = {
+			alignment = {"RIGHT", 25, 0}, 
 		},
     },
     focus = {
-		tukuiBar = TukuiFocusCastBar, 
+		separate = true,						-- separate focus castbar
         size = {350, 30}, 
 		position = {0, 250}, 
-		iconposition = {"LEFT", -25, 0}, 
 		text = { 
 			alignment = {"LEFT", 4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
@@ -53,15 +48,14 @@ ns.config={
 			alignment = {"RIGHT", -4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
 		},
-		latency = { 
-			color = {0.69, 0.31, 0.31, 0.75}, 
+		icon = {
+			alignment = {"LEFT", -25, 0}, 
 		},
     },
     focustarget = {
-		tukuiBar = TukuiFocusTargetCastBar, 
+		separate = false,						-- separate focustarget castbar
         size = {250, 26}, 
 		position = {0, 210}, 
-		iconposition = {"RIGHT", 25, 0}, 
 		text = { 
 			alignment = {"LEFT", 4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
@@ -70,8 +64,8 @@ ns.config={
 			alignment = {"RIGHT", -4, 0}, 
 			color = {0.84, 0.75, 0.65, 1}, 
 		},
-		latency = { 
-			color = {0.69, 0.31, 0.31, 0.75}, 
+		icon = {
+			alignment = {"RIGHT", 25, 0}, 
 		},
     },
 }
